@@ -7,6 +7,7 @@ from evidence_wikipedia import query_wikipedia_summary
 from statement_classifier import classify_statement
 from contradiction_checker import check_contradiction
 from ollama_reasoner import ollama_judge
+from bias_detector import rule_based_bias_check
 
 # -------------------------------
 # LOAD MODELS
@@ -34,24 +35,56 @@ def run_pipeline(input_text: str) -> dict:
     }
 
     # -------------------------------
-    # 1. CLAIM NORMALIZATION
+    # 1. NORMALIZATION
     # -------------------------------
     claim = normalize_claim(input_text)
     statement_type = classify_statement(input_text)
+
+    # -------------------------------
+# 0. INPUT ELIGIBILITY CHECK
+# -------------------------------
+    if statement_type in ["QUESTION", "OPINION_REQUEST"]:
+        return {
+            "input_statement": input_text,
+            "hallucination_detected": False,
+            "hallucination_type": "none",
+            "bias_detected": False,
+            "bias_type": "none",
+            "truth_status": "Not Applicable",
+            "corrected_statement": (
+                "This input is a question or opinion request, not a factual claim. "
+                "Hallucination and bias detection are not applicable."
+        ),
+            "sources": [],
+            "explanation": (
+                "The system detected that the input is not a verifiable factual statement. "
+                "Therefore, hallucination and bias analysis was skipped."
+        )
+    }
+
 
     # -------------------------------
     # 2. ML RISK ESTIMATION
     # -------------------------------
     X = tfidf.transform([input_text])
 
-    h_pred = hallucination_flag_model.predict(X)[0]
-    h_type_pred = hallucination_type_model.predict(X)[0]
+    h_pred = int(hallucination_flag_model.predict(X)[0])
+    h_type_pred = str(hallucination_type_model.predict(X)[0])
 
-    b_pred = bias_flag_model.predict(X)[0]
-    b_type_pred = bias_type_model.predict(X)[0]
+    b_pred = int(bias_flag_model.predict(X)[0])
+    b_type_pred = str(bias_type_model.predict(X)[0])
 
-    output["bias_detected"] = bool(b_pred)
-    output["bias_type"] = b_type_pred if b_pred else "none"
+    # Rule-based bias (backstop)
+    rule_bias, rule_bias_type = rule_based_bias_check(input_text)
+
+    output["bias_detected"] = bool(b_pred) or rule_bias
+
+    if rule_bias:
+        output["bias_type"] = rule_bias_type
+    elif b_pred:
+        output["bias_type"] = b_type_pred
+    else:
+        output["bias_type"] = "none"
 
     # -------------------------------
     # 3. FACT VERIFICATION
@@ -78,7 +111,7 @@ def run_pipeline(input_text: str) -> dict:
         output["truth_status"] = "False"
 
     # -------------------------------
-    # 5. FINAL HALLUCINATION DECISION (DATASET-ALIGNED)
+    # 5. FINAL HALLUCINATION DECISION
     # -------------------------------
     if output["truth_status"] == "True":
         output["hallucination_detected"] = False
@@ -100,7 +133,7 @@ def run_pipeline(input_text: str) -> dict:
         output["hallucination_type"] = h_type_pred if h_pred else "none"
 
     # -------------------------------
-    # 6. OLLAMA (ONLY WHEN NEEDED)
+    # 6. OLLAMA (SAFE USE)
     # -------------------------------
     if output["truth_status"] in ["Unverifiable", "Partially true"] and output["hallucination_detected"]:
         llm = ollama_judge(input_text)
@@ -115,15 +148,25 @@ def run_pipeline(input_text: str) -> dict:
             output["hallucination_type"] = "logical"
             output["corrected_statement"] = llm["corrected_statement"]
 
+        # ---- OLLAMA BIAS OVERRIDE (SAFE) ----
+        if llm.get("bias") == "yes":
+            output["bias_detected"] = True
+            output["bias_type"] = llm.get("bias_type", output["bias_type"])
+            output["hallucination_detected"] = True
+            output["hallucination_type"] = "bias"
+
     # -------------------------------
     # 7. FINAL CORRECTION
     # -------------------------------
     if not output["corrected_statement"]:
         if output["bias_detected"]:
-            output["corrected_statement"] = "This statement contains bias and should be rephrased neutrally."
+            output["corrected_statement"] = (
+                "This statement contains bias and should be rephrased in a neutral and respectful manner."
+            )
         elif output["hallucination_detected"]:
             output["corrected_statement"] = (
-                sources[0]["text"] if sources else
+                sources[0]["text"]
+                if sources else
                 "This claim is incorrect or cannot be verified using reliable sources."
             )
         else:
@@ -137,7 +180,8 @@ def run_pipeline(input_text: str) -> dict:
         f"Truth status: {output['truth_status']}. "
         f"Bias detected: {output['bias_detected']}. "
         f"Hallucination detected: {output['hallucination_detected']}. "
-        f"Decision made using dataset-trained ML models, factual verification, and local LLM reasoning."
+        f"Decision made using dataset-trained ML models, factual verification, "
+        f"rule-based bias detection, and local LLM commonsense reasoning."
     )
 
     return output
