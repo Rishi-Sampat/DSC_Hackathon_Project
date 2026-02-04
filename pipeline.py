@@ -8,6 +8,7 @@ from statement_classifier import classify_statement
 from contradiction_checker import check_contradiction
 from ollama_reasoner import ollama_judge
 from bias_detector import rule_based_bias_check
+from text_normalizer import normalize_text
 
 # -------------------------------
 # LOAD MODELS
@@ -22,6 +23,8 @@ bias_type_model = joblib.load(os.path.join(BASE_DIR, "bias_type_model.pkl"))
 
 
 def run_pipeline(input_text: str) -> dict:
+    original_input = input_text
+    input_text = normalize_text(input_text)
     output = {
         "input_statement": input_text,
         "hallucination_detected": False,
