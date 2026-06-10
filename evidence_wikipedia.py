@@ -1,13 +1,39 @@
-import wikipedia
+import requests
 
-def query_wikipedia_summary(query, sentences=2):
+WIKI_API = "https://en.wikipedia.org/api/rest_v1/page/summary/"
+
+
+def query_wikipedia_summary(query):
+
     try:
-        page = wikipedia.page(query, auto_suggest=True)
-        summary = ". ".join(page.summary.split(". ")[:sentences])
+
+        url = WIKI_API + query.replace(" ", "_")
+
+        response = requests.get(
+            url,
+            timeout=10,
+            headers={
+                "User-Agent":
+                "RAV-Hallucination-Detector/1.0"
+            }
+        )
+
+        if response.status_code != 200:
+            return None
+
+        data = response.json()
+
         return {
-            "text": summary,
+            "title": data.get("title", query),
+            "text": data.get("extract", ""),
             "source": "Wikipedia",
-            "url": page.url
+            "url": data.get("content_urls", {})
+                      .get("desktop", {})
+                      .get("page", "")
         }
-    except:
+
+    except Exception as e:
+
+        print("WIKI API ERROR:", e)
+
         return None

@@ -58,3 +58,96 @@ def query_wikidata_capital(country):
         return None
 
     return capital_data["entities"][capital_id]["labels"]["en"]["value"]
+
+def search_entity_id(name):
+
+    params = {
+        "action": "wbsearchentities",
+        "search": name,
+        "language": "en",
+        "format": "json"
+    }
+
+    data = safe_get_json(
+        WIKIDATA_API,
+        params
+    )
+
+    if not data:
+        return None
+
+    if not data.get("search"):
+        return None
+
+    return data["search"][0]["id"]
+
+def get_entity_claim(entity_id, property_id):
+
+    entity_url = (
+        f"https://www.wikidata.org/wiki/"
+        f"Special:EntityData/{entity_id}.json"
+    )
+
+    data = safe_get_json(entity_url)
+
+    if not data:
+        return None
+
+    claims = (
+        data["entities"][entity_id]
+        .get("claims", {})
+    )
+
+    if property_id not in claims:
+        return None
+
+    try:
+
+        target_id = (
+            claims[property_id][0]
+            ["mainsnak"]
+            ["datavalue"]
+            ["value"]
+            ["id"]
+        )
+
+        return target_id
+
+    except:
+        return None
+    
+def get_entity_label(entity_id):
+
+    entity_url = (
+        f"https://www.wikidata.org/wiki/"
+        f"Special:EntityData/{entity_id}.json"
+    )
+
+    data = safe_get_json(entity_url)
+
+    if not data:
+        return None
+
+    return (
+        data["entities"][entity_id]
+        ["labels"]["en"]["value"]
+    )
+
+def query_wikidata_deathplace(person):
+
+    person_id = search_entity_id(person)
+
+    if not person_id:
+        return None
+
+    # P20 = place of death
+
+    place_id = get_entity_claim(
+        person_id,
+        "P20"
+    )
+
+    if not place_id:
+        return None
+
+    return get_entity_label(place_id)

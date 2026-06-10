@@ -1,38 +1,164 @@
 from spellchecker import SpellChecker
 import re
 
+# -------------------------------------------------
+# SPELL CHECKER
+# -------------------------------------------------
 spell = SpellChecker()
 
-# Domain-specific words we NEVER want to auto-correct
+# -------------------------------------------------
+# WORDS WE NEVER WANT TO AUTO-CORRECT
+# -------------------------------------------------
 PROTECTED_WORDS = {
-    "india", "delhi", "mumbai", "cheetah", "kangaroo",
-    "hitler", "einstein", "musk", "ambani",
-    "wikidata", "wikipedia"
+    # Countries / Cities
+    "india",
+    "delhi",
+    "mumbai",
+    "rajkot",
+    "gujarat",
+    "france",
+    "paris",
+    "china",
+    "japan",
+    "london",
+
+    # People
+    "einstein",
+    "hitler",
+    "musk",
+    "ambani",
+    "gandhi",
+    "tesla",
+    "newton",
+
+    # Animals
+    "kangaroo",
+    "cheetah",
+    "elephant",
+    "giraffe",
+
+    # AI / Tech
+    "chatgpt",
+    "openai",
+    "ollama",
+    "llama",
+    "gpt",
+    "wikidata",
+    "wikipedia",
+
+    # Embedded / Electronics
+    "stm32",
+    "arduino",
+    "uart",
+    "spi",
+    "i2c",
+    "gpio",
+    "pwm",
+    "adc",
+    "dac",
+    "rs232",
+    "rs485",
+    "8052",
+
+    # Organizations
+    "ieee",
+    "nasa",
+    "isro",
+
+    # Automotive
+    "bmw",
+    "mahindra",
+    "toyota",
+    "audi",
+    "mercedes"
 }
 
+# -------------------------------------------------
+# COMMON TYPO MAP
+# -------------------------------------------------
+COMMON_TYPOS = {
+    "captial": "capital",
+    "capitol": "capital",
+    "delli": "delhi",
+    "delhii": "delhi",
+    "kangroo": "kangaroo",
+    "cheta": "cheetah",
+    "wemen": "women",
+    "wiman": "women",
+    "hte": "the",
+    "teh": "the",
+    "recieve": "receive",
+    "goverment": "government",
+    "enviroment": "environment",
+    "definately": "definitely",
+    "seperate": "separate"
+}
+
+# -------------------------------------------------
+# MAIN FUNCTION
+# -------------------------------------------------
 def normalize_text(text: str) -> str:
     """
-    Fixes minor spelling mistakes and typos.
-    Does NOT aggressively rewrite the sentence.
+    Corrects minor spelling mistakes and typos.
+    Preserves technical terms and proper nouns.
     """
+    # Safety checks
+    if text is None:
+        return ""
 
-    text = text.strip()
+    text = str(text).strip()
 
-    words = re.findall(r"\b\w+\b", text.lower())
+    if not text:
+        return ""
+
+    words = re.findall(r"\b[\w'-]+\b", text.lower())
+
     corrected_words = []
 
     for word in words:
+
+        # Protected words
         if word in PROTECTED_WORDS:
             corrected_words.append(word)
             continue
 
-        # If word is known, keep it
+        # Known typo mappings
+        if word in COMMON_TYPOS:
+            corrected_words.append(COMMON_TYPOS[word])
+            continue
+
+        # Word already known
         if word in spell:
             corrected_words.append(word)
+            continue
+
+        # Spell correction
+        suggestion = spell.correction(word)
+
+        # VERY IMPORTANT:
+        # spell.correction() can return None
+        if suggestion is None:
+            corrected_words.append(word)
         else:
-            corrected_words.append(spell.correction(word))
+            corrected_words.append(str(suggestion))
 
-    # Reconstruct sentence
-    corrected_text = " ".join(corrected_words)
+    return " ".join(corrected_words)
 
-    return corrected_text
+
+# -------------------------------------------------
+# TESTING
+# -------------------------------------------------
+if __name__ == "__main__":
+
+    tests = [
+        "Delli is the captial of India",
+        "kangroo has pouch",
+        "wemen are bad drivers",
+        "STM32 uses UART",
+        "Hitler was british"
+    ]
+
+    for t in tests:
+        print("Original :", t)
+        print("Corrected:", normalize_text(t))
+        print()

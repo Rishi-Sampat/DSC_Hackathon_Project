@@ -110,9 +110,15 @@ def run_pipeline(input_text: str) -> dict:
     # -------------------------------
     # 4. CONTRADICTION CHECK
     # -------------------------------
-    if sources and check_contradiction(input_text, sources[0]["text"]):
-        output["truth_status"] = "False"
+    if sources:
 
+        contradiction = check_contradiction(
+            input_text,
+            sources[0]["text"]
+        )
+
+        if contradiction:
+            output["truth_status"] = "False"
     # -------------------------------
     # 5. FINAL HALLUCINATION DECISION
     # -------------------------------

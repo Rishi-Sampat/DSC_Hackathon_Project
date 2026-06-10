@@ -48,12 +48,24 @@ def classify_statement(text: str) -> str:
     # -------------------------------------------------
     # 3. HARD FACTUAL RELATIONS
     # -------------------------------------------------
-    if any(word in text for word in [
-        "capital", "located", "is in", "invented", "founded",
-        "discovered", "born", "died"
-    ]):
-        return "HARD_FACT"
+    hard_fact_patterns = [
+        "capital",
+        "located",
+        "is in",
+        "invented",
+        "founded",
+        "discovered",
+        "born",
+        "died",
+        "was",
+        "is a",
+        "is an",
+        "are",
+        "belongs to"
+]
 
+    if any(pattern in text for pattern in hard_fact_patterns):
+        return "HARD_FACT"
     # -------------------------------------------------
     # 4. GENERALIZATION / STEREOTYPE OPINIONS
     # -------------------------------------------------
