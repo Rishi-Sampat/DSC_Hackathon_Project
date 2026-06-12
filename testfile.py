@@ -1,5 +1,19 @@
-from temporal_facts import TEMPORAL_FACTS
+from claim_normalizer import normalize_claim
 
-print(TEMPORAL_FACTS["india"])
-print(TEMPORAL_FACTS["albert einstein"])
-print(TEMPORAL_FACTS["world war ii"])
+print(
+    normalize_claim(
+        "Smoking causes cancer"
+    )
+)
+
+print(
+    normalize_claim(
+        "Rain leads to flooding"
+    )
+)
+
+print(
+    normalize_claim(
+        "Exercise results in better health"
+    )
+)

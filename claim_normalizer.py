@@ -464,6 +464,144 @@ def normalize_claim(text: str) -> dict:
                     "value": None,
                     "negated": negated
                 }
+            
+    # ==========================================
+    # NEGATED CAUSE-EFFECT
+    # ==========================================
+
+    match = re.search(
+        r"(.*?) does not cause (.*)",
+        text
+    )
+
+    if match:
+
+        return {
+            "type": "structured",
+            "relation": "causes",
+            "subject": canonicalize_entity(
+                match.group(1)
+            ).title(),
+            "object": canonicalize_entity(
+                match.group(2)
+            ).title(),
+            "value": None,
+            "negated": True
+        }
+    
+    match = re.search(
+        r"(.*?) does not lead to (.*)",
+        text
+    )
+
+    if match:
+
+        return {
+            "type": "structured",
+            "relation": "causes",
+            "subject": canonicalize_entity(
+                match.group(1)
+            ).title(),
+            "object": canonicalize_entity(
+                match.group(2)
+            ).title(),
+            "value": None,
+            "negated": True
+        }
+    
+    match = re.search(
+        r"(.*?) does not result in (.*)",
+        text
+    )
+
+    if match:
+
+        return {
+            "type": "structured",
+            "relation": "causes",
+            "subject": canonicalize_entity(
+                match.group(1)
+            ).title(),
+            "object": canonicalize_entity(
+                match.group(2)
+            ).title(),
+            "value": None,
+            "negated": True
+        }
+    # ==========================================
+    # CAUSE-EFFECT
+    # X causes Y
+    # ==========================================
+
+    match = re.search(
+        r"(.*?) causes (.*)",
+        text
+    )
+
+    if match:
+
+        return {
+            "type": "structured",
+            "relation": "causes",
+            "subject": canonicalize_entity(
+                match.group(1)
+            ).title(),
+            "object": canonicalize_entity(
+                match.group(2)
+            ).title(),
+            "value": None,
+            "negated": negated
+        }
+
+
+    # ==========================================
+    # X leads to Y
+    # ==========================================
+
+    match = re.search(
+        r"(.*?) leads to (.*)",
+        text
+    )
+
+    if match:
+
+        return {
+            "type": "structured",
+            "relation": "causes",
+            "subject": canonicalize_entity(
+                match.group(1)
+            ).title(),
+            "object": canonicalize_entity(
+                match.group(2)
+        ).title(),
+        "value": None,
+        "negated": negated
+    }
+
+
+    # ==========================================
+    # X results in Y
+    # ==========================================
+
+    match = re.search(
+        r"(.*?) results in (.*)",
+        text
+    )
+
+    if match:
+
+        return {
+            "type": "structured",
+            "relation": "causes",
+            "subject": canonicalize_entity(
+                match.group(1)
+            ).title(),
+            "object": canonicalize_entity(
+                match.group(2)
+            ).title(),
+            "value": None,
+            "negated": negated
+        }        
 
 # ==========================================
 # SEMANTIC RELATION FALLBACK

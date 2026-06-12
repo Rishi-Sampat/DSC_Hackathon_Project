@@ -10,6 +10,7 @@ from entity_similarity import entities_similar
 from comparison_facts import COMPARISON_FACTS
 from numeric_facts import NUMERIC_FACTS
 from temporal_facts import TEMPORAL_FACTS
+from causal_facts import CAUSAL_FACTS
 
 def apply_negation(truth_status, claim):
 
@@ -388,6 +389,35 @@ def verify_structured_claim(claim):
         result = (
             "True"
             if actual_year == claimed_year
+            else "False"
+        )
+
+        result = apply_negation(
+            result,
+            claim
+        )
+
+        return result, []
+    
+        # ==========================================
+    # CAUSE - EFFECT
+    # ==========================================
+    elif relation == "causes":
+
+        subject = claim["subject"].lower()
+        obj = claim["object"].lower()
+
+        if subject not in CAUSAL_FACTS:
+            return "Unverifiable", []
+
+        effects = [
+            e.lower()
+            for e in CAUSAL_FACTS[subject]
+        ]
+
+        result = (
+            "True"
+            if obj in effects
             else "False"
         )
 
