@@ -1,7 +1,5 @@
-from claim_normalizer import normalize_claim
+from numeric_facts import NUMERIC_FACTS
 
-print(normalize_claim("Einstein was not German"))
-
-print(normalize_claim("Hitler did not die in Berlin"))
-
-print(normalize_claim("Einstein was German"))
+print(NUMERIC_FACTS["spider"])
+print(NUMERIC_FACTS["human"])
+print(NUMERIC_FACTS["earth"])

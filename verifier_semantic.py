@@ -8,7 +8,7 @@ from relation_query_builder import build_relation_query
 from country_aliases import COUNTRY_ALIASES
 from entity_similarity import entities_similar
 from comparison_facts import COMPARISON_FACTS
-
+from numeric_facts import NUMERIC_FACTS
 
 def apply_negation(truth_status, claim):
 
@@ -73,18 +73,54 @@ def verify_structured_claim(claim):
 
         return "Unverifiable", []
 
-    # ==========================================
+        # ==========================================
     # COUNT
     # ==========================================
     elif relation == "count":
 
+        subject = claim["subject"].lower()
+        obj = claim["object"].lower()
+        value = claim["value"]
+
+        # ------------------------------------------
+        # LOCAL NUMERIC FACT DATABASE
+        # ------------------------------------------
+
+        if (
+            subject in NUMERIC_FACTS
+            and
+            obj in NUMERIC_FACTS[subject]
+        ):
+
+            actual_value = (
+                NUMERIC_FACTS[subject][obj]
+            )
+
+            result = (
+                "True"
+                if actual_value == value
+                else "False"
+            )
+
+            result = apply_negation(
+                result,
+                claim
+            )
+
+            return result, []
+
+        # ------------------------------------------
+        # WIKIPEDIA FALLBACK
+        # ------------------------------------------
+
         query = f"{claim['subject']} {claim['object']}"
+
         wiki = query_wikipedia_summary(query)
 
         if not wiki:
             return "Unverifiable", []
 
-        if str(claim["value"]) in wiki["text"]:
+        if str(value) in wiki["text"]:
 
             result = apply_negation(
                 "True",
