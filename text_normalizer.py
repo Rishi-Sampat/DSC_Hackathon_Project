@@ -70,7 +70,16 @@ PROTECTED_WORDS = {
     "mahindra",
     "toyota",
     "audi",
-    "mercedes"
+    "mercedes",
+
+    "k2",
+    "everest",
+    "mars",
+    "earth",
+    "jupiter",
+    "pakistan",
+    "china",
+    "mount"
 }
 
 # -------------------------------------------------
@@ -132,11 +141,15 @@ def normalize_text(text: str) -> str:
             corrected_words.append(word)
             continue
 
+        # Protect technical/alphanumeric terms
+        if any(char.isdigit() for char in word):
+            corrected_words.append(word)
+            continue
+
         # Spell correction
         suggestion = spell.correction(word)
 
-        # VERY IMPORTANT:
-        # spell.correction() can return None
+        # spell.correction() may return None
         if suggestion is None:
             corrected_words.append(word)
         else:
@@ -155,7 +168,9 @@ if __name__ == "__main__":
         "kangroo has pouch",
         "wemen are bad drivers",
         "STM32 uses UART",
-        "Hitler was british"
+        "Hitler was british",
+        "Mount Everest is taller than K2",
+        "RS485 is faster than RS232"
     ]
 
     for t in tests:

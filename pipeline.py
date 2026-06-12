@@ -9,6 +9,8 @@ from contradiction_checker import check_contradiction
 from ollama_reasoner import ollama_judge
 from bias_detector import rule_based_bias_check
 from text_normalizer import normalize_text
+from multi_claim_splitter import split_claims
+from claim_propagator import propagate_subject
 
 # -------------------------------
 # LOAD MODELS
@@ -25,6 +27,9 @@ bias_type_model = joblib.load(os.path.join(BASE_DIR, "bias_type_model.pkl"))
 def run_pipeline(input_text: str) -> dict:
     original_input = input_text
     input_text = normalize_text(input_text)
+    claims, connectors = split_claims(input_text)
+
+    claims = propagate_subject(claims)
     output = {
         "input_statement": input_text,
         "hallucination_detected": False,
@@ -40,7 +45,8 @@ def run_pipeline(input_text: str) -> dict:
     # -------------------------------
     # 1. NORMALIZATION
     # -------------------------------
-    claim = normalize_claim(input_text)
+
+    claims_text = claims
     statement_type = classify_statement(input_text)
 
     # -------------------------------
@@ -94,19 +100,69 @@ def run_pipeline(input_text: str) -> dict:
     # -------------------------------
     sources = []
 
-    if claim["type"] == "structured":
-        truth_status, sources = verify_structured_claim(claim)
+    claim_results = []
+
+    for claim_text in claims_text:
+
+        claim = normalize_claim(claim_text)
+
+        if claim["type"] == "structured":
+
+            truth_status, claim_sources = (
+                verify_structured_claim(claim)
+            )
+
+        else:
+
+            wiki = query_wikipedia_summary(
+                claim_text
+            )
+
+            if wiki:
+                truth_status = "Partially true"
+                claim_sources = [wiki]
+            else:
+                truth_status = "Unverifiable"
+                claim_sources = []
+
+        claim_results.append(truth_status)
+
+        sources.extend(claim_sources)
+
+        # -------------------------------
+        # MULTI-CLAIM AGGREGATION
+        # -------------------------------
+
+    if "or" in connectors:
+
+        if "True" in claim_results:
+            truth_status = "True"
+
+        elif all(r == "False" for r in claim_results):
+            truth_status = "False"
+
+        else:
+            truth_status = "Unverifiable"
+
     else:
-        wiki = query_wikipedia_summary(input_text)
-        if wiki:
+
+        if all(r == "True" for r in claim_results):
+            truth_status = "True"
+
+        elif all(r == "False" for r in claim_results):
+            truth_status = "False"
+
+        elif "True" in claim_results and "False" in claim_results:
             truth_status = "Partially true"
-            sources = [wiki]
+
+        elif "True" in claim_results:
+            truth_status = "Partially true"
+
         else:
             truth_status = "Unverifiable"
 
     output["truth_status"] = truth_status
     output["sources"] = sources
-
     # -------------------------------
     # 4. CONTRADICTION CHECK
     # -------------------------------

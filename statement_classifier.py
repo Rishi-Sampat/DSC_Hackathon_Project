@@ -1,6 +1,17 @@
 def classify_statement(text: str) -> str:
     text = text.strip().lower()
 
+    if any(
+        phrase in text
+        for phrase in [
+            "taller than",
+            "higher than",
+            "larger than",
+            "bigger than"
+        ]
+    ):
+        return "HARD_FACT"
+
     # -------------------------------------------------
     # 0. QUESTION / OPINION-SEEKING (EARLY EXIT)
     # -------------------------------------------------
@@ -26,7 +37,7 @@ def classify_statement(text: str) -> str:
 
     for op in opinion_requests:
         if op in text:
-            return "OPINION_REQUEST"
+            return "OPINION_REQUEST"    
 
     # -------------------------------------------------
     # 1. COMPARATIVE / EXTREME CLAIMS
@@ -48,23 +59,25 @@ def classify_statement(text: str) -> str:
     # -------------------------------------------------
     # 3. HARD FACTUAL RELATIONS
     # -------------------------------------------------
-    hard_fact_patterns = [
+    if any(word in text for word in [
         "capital",
         "located",
+        "situated",
+        "inside",
+        "part of",
         "is in",
         "invented",
         "founded",
         "discovered",
         "born",
         "died",
-        "was",
-        "is a",
-        "is an",
-        "are",
-        "belongs to"
-]
-
-    if any(pattern in text for pattern in hard_fact_patterns):
+        "nationality",
+        "citizenship",
+        "citizen of",
+        "worked as",
+        "occupation",
+        "profession"
+    ]):
         return "HARD_FACT"
     # -------------------------------------------------
     # 4. GENERALIZATION / STEREOTYPE OPINIONS

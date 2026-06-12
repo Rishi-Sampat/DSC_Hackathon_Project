@@ -1,10 +1,31 @@
 import re
-
+from semantic_relation_detector import detect_relation
+from entity_linker import canonicalize_entity
+from negation_detector import contains_negation
 
 def normalize_claim(text: str) -> dict:
 
     text = text.strip().lower()
+    negated = contains_negation(text)
+    
+    match = re.search(
+        r"(.*?) is not the capital of (.*)",
+        text
+    )
 
+    if match:
+        return {
+            "type": "structured",
+            "relation": "capital_of",
+            "subject": canonicalize_entity(
+                match.group(1)
+            ).title(),
+            "object": canonicalize_entity(
+                match.group(2)
+            ).title(),
+            "value": None,
+            "negated": True
+        }
     # ==========================================
     # CAPITAL RELATION
     # ==========================================
@@ -14,9 +35,14 @@ def normalize_claim(text: str) -> dict:
         return {
             "type": "structured",
             "relation": "capital_of",
-            "subject": match.group(1).title(),
-            "object": match.group(2).title(),
-            "value": None
+            "subject": canonicalize_entity(
+                match.group(1)
+            ).title(),
+            "object": canonicalize_entity(
+                match.group(2)
+            ).title(),
+            "value": None,
+            "negated": negated
         }
 
     # ==========================================
@@ -28,9 +54,14 @@ def normalize_claim(text: str) -> dict:
         return {
             "type": "structured",
             "relation": "count",
-            "subject": match.group(1).title(),
-            "object": match.group(3).replace("s", "").replace("ies", "y"),
-            "value": int(match.group(2))
+            "subject": canonicalize_entity(
+                match.group(1)
+            ).title(),
+            "object": canonicalize_entity(
+                match.group(3).replace("s", "").replace("ies", "y")
+            ).title(),
+            "value": int(match.group(2)),
+            "negated": negated
         }
 
     # ==========================================
@@ -42,9 +73,32 @@ def normalize_claim(text: str) -> dict:
         return {
             "type": "structured",
             "relation": "located_in",
-            "subject": match.group(1).title(),
-            "object": match.group(2).title(),
-            "value": None
+            "subject": canonicalize_entity(
+                match.group(1)
+            ).title(),
+            "object": canonicalize_entity(
+                match.group(2)
+            ).title(),
+            "value": None,
+            "negated": negated
+        }
+    match = re.search(
+        r"(.*?) was not born in (.*)",
+        text
+    )
+
+    if match:
+        return {
+            "type": "structured",
+            "relation": "born_in",
+            "subject": canonicalize_entity(
+                match.group(1)
+            ).title(),
+            "object": canonicalize_entity(
+                match.group(2)
+            ).title(),
+            "value": None,
+            "negated": True
         }
 
     # ==========================================
@@ -56,9 +110,32 @@ def normalize_claim(text: str) -> dict:
         return {
             "type": "structured",
             "relation": "born_in",
-            "subject": match.group(1).title(),
-            "object": match.group(2).title(),
-            "value": None
+            "subject": canonicalize_entity(
+                match.group(1)
+            ).title(),
+            "object": canonicalize_entity(
+                match.group(2)
+            ).title(),
+            "value": None,
+            "negated": negated
+        }
+    match = re.search(
+        r"(.*?) did not die in (.*)",
+        text
+    )
+
+    if match:
+        return {
+            "type": "structured",
+            "relation": "died_in",
+            "subject": canonicalize_entity(
+                match.group(1)
+            ).title(),
+            "object": canonicalize_entity(
+                match.group(2)
+            ).title(),
+            "value": None,
+            "negated": True
         }
 
     # ==========================================
@@ -70,9 +147,14 @@ def normalize_claim(text: str) -> dict:
         return {
             "type": "structured",
             "relation": "died_in",
-            "subject": match.group(1).title(),
-            "object": match.group(2).title(),
-            "value": None
+            "subject": canonicalize_entity(
+                match.group(1)
+            ).title(),
+            "object": canonicalize_entity(
+                match.group(2)
+            ).title(),
+            "value": None,
+            "negated": negated
         }
 
     # ==========================================
@@ -84,9 +166,14 @@ def normalize_claim(text: str) -> dict:
         return {
             "type": "structured",
             "relation": "invented_by",
-            "subject": match.group(1).title(),
-            "object": match.group(2).title(),
-            "value": None
+            "subject": canonicalize_entity(
+                match.group(1)
+            ).title(),
+            "object": canonicalize_entity(
+                match.group(2)
+            ).title(),
+            "value": None,
+            "negated": negated
         }
 
     # ==========================================
@@ -99,9 +186,71 @@ def normalize_claim(text: str) -> dict:
         return {
             "type": "structured",
             "relation": "occupation",
-            "subject": match.group(1).title(),
-            "object": match.group(2).title(),
-            "value": None
+            "subject": canonicalize_entity(
+                match.group(1)
+            ).title(),
+            "object": canonicalize_entity(
+                match.group(2)
+            ).title(),
+            "value": None,
+            "negated": negated
+        }
+
+    match = re.search(
+        r"(.*?) was not (.*)",
+        text
+    )
+
+    if match:
+        return {
+            "type": "structured",
+            "relation": "nationality",
+            "subject": canonicalize_entity(
+                match.group(1)
+            ).title(),
+            "object": canonicalize_entity(
+                match.group(2)
+            ).title(),
+            "value": None,
+            "negated": True
+        }
+    
+    # ==========================================
+# COMPARISON
+# ==========================================
+
+    match = re.search(
+        r"(.*?) is (not )?(taller|higher|bigger|larger) than (.*)",
+        text
+    )
+
+    if match:
+
+        relation_map = {
+            "taller": "taller_than",
+            "higher": "taller_than",
+            "bigger": "larger_than",
+            "larger": "larger_than"
+        }
+
+        return {
+            "type": "structured",
+            "relation": "comparison",
+            "subject": canonicalize_entity(
+                match.group(1)
+            ).title(),
+
+            "object": canonicalize_entity(
+                match.group(4)
+            ).title(),
+
+            "comparison": relation_map[
+                match.group(3)
+            ],
+
+            "negated": bool(
+                match.group(2)
+            )
         }
 
     # ==========================================
@@ -115,9 +264,33 @@ def normalize_claim(text: str) -> dict:
         return {
             "type": "structured",
             "relation": "nationality",
-            "subject": match.group(1).title(),
-            "object": match.group(2).title(),
-            "value": None
+            "subject": canonicalize_entity(
+                match.group(1)
+            ).title(),
+            "object": canonicalize_entity(
+                match.group(2)
+            ).title(),
+            "value": None,
+            "negated": negated
+        }
+    
+    match = re.search(
+        r"(.*?) is not a[n]? (.*)",
+        text
+    )
+
+    if match:
+        return {
+            "type": "structured",
+            "relation": "is_a",
+            "subject": canonicalize_entity(
+                match.group(1)
+            ).title(),
+            "object": canonicalize_entity(
+                match.group(2)
+            ).title(),
+            "value": None,
+            "negated": True
         }
 
     # ==========================================
@@ -130,10 +303,105 @@ def normalize_claim(text: str) -> dict:
         return {
             "type": "structured",
             "relation": "is_a",
-            "subject": match.group(1).title(),
-            "object": match.group(2).title(),
-            "value": None
+            "subject": canonicalize_entity(
+                match.group(1)
+            ).title(),
+            "object": canonicalize_entity(
+                match.group(2)
+            ).title(),
+            "value": None,
+            "negated": negated
         }
+
+    # ==========================================
+    # SEMANTIC RELATION DETECTION
+    # ==========================================
+
+    relation = detect_relation(text)
+
+    if relation:
+
+        # Nationality patterns
+        if relation == "nationality":
+
+            match = re.search(
+                r"(.*?) (?:citizen of|nationality|citizenship) (.*)",
+                text
+            )
+
+            if match:
+
+                return {
+                    "type": "structured",
+                    "relation": "nationality",
+                    "subject": canonicalize_entity(
+                        match.group(1)
+                    ).title(),
+                    "object": canonicalize_entity(
+                        match.group(2)
+                    ).title(),
+                    "value": None,
+                    "negated": negated
+                }
+
+        # Occupation patterns
+        elif relation == "occupation":
+
+            match = re.search(
+                r"(.*?) (?:worked as|served as|occupation|profession) (.*)",
+                text
+            )
+
+            if match:
+
+                return {
+                    "type": "structured",
+                    "relation": "occupation",
+                    "subject": canonicalize_entity(match.group(1)).title(),
+                    "object": canonicalize_entity(match.group(2)).title(),
+                    "value": None,
+                    "negated": negated
+                }
+
+        # Location patterns
+        elif relation == "located_in":
+
+            match = re.search(
+                r"(.*?) (?:located in|situated in|inside|part of) (.*)",
+                text
+            )
+
+            if match:
+
+                return {
+                    "type": "structured",
+                    "relation": "located_in",
+                    "subject": canonicalize_entity(match.group(1)).title(),
+                    "object": canonicalize_entity(match.group(2)).title(),
+                    "value": None,
+                    "negated": negated
+                }
+
+# ==========================================
+# SEMANTIC RELATION FALLBACK
+# ==========================================
+
+    relation = detect_relation(text)
+
+    if relation:
+
+        words = text.split()
+
+        if len(words) >= 3:
+
+            return {
+                "type": "structured",
+                "relation": relation,
+                "subject": words[0].title(),
+                "object": words[-1].title(),
+                "value": None,
+                "negated": negated
+           }
 
     # ==========================================
     # FALLBACK
@@ -143,5 +411,6 @@ def normalize_claim(text: str) -> dict:
         "relation": None,
         "subject": text,
         "object": None,
-        "value": None
+        "value": None,
+        "negated": negated
     }
