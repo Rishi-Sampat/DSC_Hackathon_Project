@@ -63,6 +63,89 @@ def normalize_claim(text: str) -> dict:
             "value": int(match.group(2)),
             "negated": negated
         }
+        # ==========================================
+    # INDEPENDENCE YEAR
+    # India became independent in 1947
+    # ==========================================
+    match = re.search(
+        r"(.*?) became independent in (\d{4})",
+        text
+    )
+
+    if match:
+        return {
+            "type": "structured",
+            "relation": "independence_year",
+            "subject": canonicalize_entity(
+                match.group(1)
+            ).title(),
+            "object": None,
+            "value": int(match.group(2)),
+            "negated": negated
+        }
+
+    # ==========================================
+    # DEATH YEAR
+    # Einstein died in 1955
+    # ==========================================
+    match = re.search(
+        r"(.*?) died in (\d{4})",
+        text
+    )
+
+    if match:
+        return {
+            "type": "structured",
+            "relation": "death_year",
+            "subject": canonicalize_entity(
+                match.group(1)
+            ).title(),
+            "object": None,
+            "value": int(match.group(2)),
+            "negated": negated
+        }
+
+    # ==========================================
+    # BIRTH YEAR
+    # Einstein was born in 1879
+    # ==========================================
+    match = re.search(
+        r"(.*?) was born in (\d{4})",
+        text
+    )
+
+    if match:
+        return {
+            "type": "structured",
+            "relation": "birth_year",
+            "subject": canonicalize_entity(
+                match.group(1)
+            ).title(),
+            "object": None,
+            "value": int(match.group(2)),
+            "negated": negated
+        }
+
+    # ==========================================
+    # EVENT YEAR
+    # World War II ended in 1945
+    # ==========================================
+    match = re.search(
+        r"(.*?) ended in (\d{4})",
+        text
+    )
+
+    if match:
+        return {
+            "type": "structured",
+            "relation": "end_year",
+            "subject": canonicalize_entity(
+                match.group(1)
+            ).title(),
+            "object": None,
+            "value": int(match.group(2)),
+            "negated": negated
+        }
 
     # ==========================================
     # LOCATION RELATION

@@ -1,5 +1,5 @@
-from numeric_facts import NUMERIC_FACTS
+from temporal_facts import TEMPORAL_FACTS
 
-print(NUMERIC_FACTS["spider"])
-print(NUMERIC_FACTS["human"])
-print(NUMERIC_FACTS["earth"])
+print(TEMPORAL_FACTS["india"])
+print(TEMPORAL_FACTS["albert einstein"])
+print(TEMPORAL_FACTS["world war ii"])

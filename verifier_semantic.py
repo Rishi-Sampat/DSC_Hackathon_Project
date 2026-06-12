@@ -9,6 +9,7 @@ from country_aliases import COUNTRY_ALIASES
 from entity_similarity import entities_similar
 from comparison_facts import COMPARISON_FACTS
 from numeric_facts import NUMERIC_FACTS
+from temporal_facts import TEMPORAL_FACTS
 
 def apply_negation(truth_status, claim):
 
@@ -358,6 +359,44 @@ def verify_structured_claim(claim):
         )
 
         return result, [wiki]
+        # ==========================================
+    # TEMPORAL FACTS
+    # ==========================================
+    elif relation in [
+        "birth_year",
+        "death_year",
+        "independence_year",
+        "end_year"
+    ]:
+
+        subject = claim["subject"].lower()
+
+        if subject not in TEMPORAL_FACTS:
+            return "Unverifiable", []
+
+        relation_key = relation
+
+        if relation_key not in TEMPORAL_FACTS[subject]:
+            return "Unverifiable", []
+
+        actual_year = (
+            TEMPORAL_FACTS[subject][relation_key]
+        )
+
+        claimed_year = claim["value"]
+
+        result = (
+            "True"
+            if actual_year == claimed_year
+            else "False"
+        )
+
+        result = apply_negation(
+            result,
+            claim
+        )
+
+        return result, []
     
     # ==========================================
 # COMPARISON

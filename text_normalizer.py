@@ -79,8 +79,17 @@ PROTECTED_WORDS = {
     "jupiter",
     "pakistan",
     "china",
-    "mount"
-}
+    "mount",
+
+    "ii",
+    "iii",
+    "iv",
+    "vi",
+    "vii",
+    "viii",
+    "ix",
+    "x",
+    }
 
 # -------------------------------------------------
 # COMMON TYPO MAP
