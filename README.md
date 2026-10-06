@@ -52,7 +52,6 @@
 - [Limitations](#-limitations)
 - [Future Improvements](#-future-improvements)
 - [Research Direction](#-research-direction)
-- [Author](#-author)
 
 ---
 
