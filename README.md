@@ -1868,7 +1868,7 @@ Local LLM Reasoning
 
 ### Event
 
-**DSC Hackathon — January 2026**
+**DSC Hackathon — Jan 2026**
 
 ### Core contribution
 
