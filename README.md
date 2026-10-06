@@ -1939,14 +1939,6 @@ Correction + Explanation
 
 ---
 
-# 📄 License
-
-No explicit open-source license is currently specified in the repository.
-
-If the project is intended to be distributed as open-source software, add an appropriate `LICENSE` file to the repository.
-
----
-
 <div align="center">
 
 ### From detecting suspicious AI output to verifying the claims behind it.
