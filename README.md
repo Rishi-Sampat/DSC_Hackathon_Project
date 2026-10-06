@@ -1940,20 +1940,6 @@ Correction + Explanation
 
 ---
 
-# 👨‍💻 Author
-
-## Rishi Sampat
-
-AI/ML · Robotics · Embedded Systems · Trustworthy AI
-
-**GitHub:**  
-https://github.com/Rishi-Sampat
-
-**Project Repository:**  
-https://github.com/Rishi-Sampat/DSC_Hackathon_Project
-
----
-
 # 📄 License
 
 No explicit open-source license is currently specified in the repository.
